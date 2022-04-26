@@ -1,14 +1,19 @@
 package ru.mirea.sysoeva.firebaseauth;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -17,25 +22,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText passwordTextEdit;
     private TextView statusTextView;
     private FirebaseAuth auth;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        emailEditText = findViewById(R.id.email_input);
-        passwordTextEdit = findViewById(R.id.password_input);
-        statusTextView = findViewById(R.id.status_text_view);
-
-        findViewById(R.id.sign_in_button).setOnClickListener(this);
-        findViewById(R.id.create_account_button).setOnClickListener(this);
-        findViewById(R.id.sign_out_button).setOnClickListener(this);
+        // Views
+        emailEditText = findViewById(R.id.emailTV);
+        passwordTextEdit = findViewById(R.id.passwordTV);
+        statusTextView = findViewById(R.id.statusTV);
+        // Buttons
+        findViewById(R.id.signInBtn).setOnClickListener(this);
+        findViewById(R.id.createBtn).setOnClickListener(this);
+        findViewById(R.id.signOutBtn).setOnClickListener(this);
+        // [START initialize_auth]
         auth = FirebaseAuth.getInstance();
+        // [END initialize_auth]
     }
-
+    // [START on_start_check_user]
     @Override
     public void onStart() {
         super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly
         FirebaseUser currentUser = auth.getCurrentUser();
         updateUI(currentUser);
     }
@@ -44,24 +53,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (user != null) {
             statusTextView.setText(getString(R.string.emailpassword_status_fmt,
                     user.getEmail(), user.isEmailVerified()));
-            findViewById(R.id.email_input).setVisibility(View.GONE);
-            findViewById(R.id.password_input).setVisibility(View.GONE);
-            findViewById(R.id.sign_in_button).setVisibility(View.GONE);
-            findViewById(R.id.create_account_button).setVisibility(View.GONE);
-            findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
+            findViewById(R.id.emailTV).setVisibility(View.GONE);
+            findViewById(R.id.passwordTV).setVisibility(View.GONE);
+            findViewById(R.id.signInBtn).setVisibility(View.GONE);
+            findViewById(R.id.createBtn).setVisibility(View.GONE);
+            findViewById(R.id.signOutBtn).setVisibility(View.VISIBLE);
 
         } else {
             statusTextView.setText(R.string.signed_out);
-            findViewById(R.id.password_input).setVisibility(View.VISIBLE);
-            findViewById(R.id.email_input).setVisibility(View.VISIBLE);
-            findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
-            findViewById(R.id.create_account_button).setVisibility(View.VISIBLE);
-            findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
+            findViewById(R.id.passwordTV).setVisibility(View.VISIBLE);
+            findViewById(R.id.emailTV).setVisibility(View.VISIBLE);
+            findViewById(R.id.signInBtn).setVisibility(View.VISIBLE);
+            findViewById(R.id.createBtn).setVisibility(View.VISIBLE);
+            findViewById(R.id.signOutBtn).setVisibility(View.VISIBLE);
         }
     }
 
     private boolean validateForm() {
         boolean valid = true;
+
         String email = emailEditText.getText().toString();
         if (TextUtils.isEmpty(email)) {
             emailEditText.setError("Required.");
@@ -69,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             emailEditText.setError(null);
         }
+
         String password = passwordTextEdit.getText().toString();
         if (TextUtils.isEmpty(password)) {
             passwordTextEdit.setError("Required.");
@@ -80,57 +91,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void createAccount(String email, String password) {
+        Log.d(TAG, "createAccount:" + email);
         if (!validateForm()) {
             return;
         }
-        auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = auth.getCurrentUser();
-                        updateUI(user);
-                    } else {
-                        Toast.makeText(MainActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
-                        updateUI(null);
-                    }
-                });
+        // [START create_user_with_email]
+        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
+            if (task.isSuccessful()) {
+                // Sign in success, update UI with the signed-in user's information
+                Log.d(TAG, "createUserWithEmail:success");
+                FirebaseUser user = auth.getCurrentUser();
+                updateUI(user);
+            } else {
+                // If sign in fails, display a message to the user
+                Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                Toast.makeText(MainActivity.this, "Authentication failed.",
+                        Toast.LENGTH_SHORT).show();
+                updateUI(null);
+            }
+        });
+        // [END create_user_with_email]
     }
 
+    private void signIn(String email, String password) {
+        Log.d(TAG, "signIn:" + email);
+        if (!validateForm()) {
+            return;
+        }
+        // [START sign_in_with_email]
+        auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithEmail:success");
+                            FirebaseUser user = auth.getCurrentUser();
+                            updateUI(user);
+                        } else {
+                            // If sign in fails, display a message to the user
+                            Log.w(TAG, "signInWithEmail:failure", task.getException());
+                            Toast.makeText(MainActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                            updateUI(null);
+                        }
+                        // [START_EXCLUDE]
+                        if (!task.isSuccessful()) {
+                            statusTextView.setText(R.string.auth_failed);
+                        }
+                        // [END_EXCLUDE]
+                    }
+                    // [END sign_in_with_email]
+                });
+    }
     private void signOut() {
         auth.signOut();
         updateUI(null);
     }
-
-    private void signIn(String email, String password) {
-        if (!validateForm()) {
-            return;
-        }
-        auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = auth.getCurrentUser();
-                        updateUI(user);
-                    } else {
-                        Toast.makeText(MainActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
-                        updateUI(null);
-                    }
-                    if (!task.isSuccessful()) {
-                        statusTextView.setText(R.string.auth_failed);
-                    }
-                });
-    }
-
     @Override
     public void onClick(View view) {
         int i = view.getId();
-        if (i == R.id.create_account_button) {
+        if (i == R.id.createBtn) {
             createAccount(emailEditText.getText().toString(),
                     passwordTextEdit.getText().toString());
-        } else if (i == R.id.sign_in_button) {
+        } else if (i == R.id.signInBtn) {
             signIn(emailEditText.getText().toString(),
                     passwordTextEdit.getText().toString());
-        } else if (i == R.id.sign_out_button){
+        } else if (i == R.id.signOutBtn){
             signOut();
         }
     }

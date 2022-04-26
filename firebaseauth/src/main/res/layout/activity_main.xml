@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <EditText
-        android:id="@+id/email_input"
+        android:id="@+id/emailTV"
         android:layout_width="194dp"
         android:layout_height="50dp"
         android:ems="10"
@@ -22,7 +22,7 @@
         app:layout_constraintVertical_bias="0.795" />
 
     <EditText
-        android:id="@+id/password_input"
+        android:id="@+id/passwordTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -37,7 +37,7 @@
         app:layout_constraintVertical_bias="0.793" />
 
     <Button
-        android:id="@+id/sign_in_button"
+        android:id="@+id/signInBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sign in"
@@ -49,7 +49,7 @@
         app:layout_constraintVertical_bias="0.98" />
 
     <Button
-        android:id="@+id/create_account_button"
+        android:id="@+id/createBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Create account"
@@ -61,7 +61,7 @@
         app:layout_constraintVertical_bias="0.877" />
 
     <TextView
-        android:id="@+id/status_text_view"
+        android:id="@+id/statusTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Signed out"
@@ -72,7 +72,7 @@
         app:layout_constraintVertical_bias="0.563" />
 
     <Button
-        android:id="@+id/sign_out_button"
+        android:id="@+id/signOutBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sign out"
